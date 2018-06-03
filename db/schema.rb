@@ -14,6 +14,7 @@ ActiveRecord::Schema.define(version: 2018_06_03_030349) do
 
   create_table "family_goals", force: :cascade do |t|
     t.string "name"
+    t.string "code"
     t.string "position"
     t.string "area"
     t.string "world"

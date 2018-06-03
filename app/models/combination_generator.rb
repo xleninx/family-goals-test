@@ -1,6 +1,6 @@
 require 'roo'
 class CombinationGenerator
-  attr_accessor :xlsx, :family_names, :positions, :worlds, :area
+  attr_accessor :xlsx, :family_names, :positions, :worlds, :area, :family_codes
 
   def initialize(mode: :dummy)
     if mode == :xlsx
@@ -13,14 +13,20 @@ class CombinationGenerator
 
   def save_family_goals
     generate_combinations.each do |arr|
-      FamilyGoal.create(name: arr[0], position: arr[1], area: arr[2], world: arr[3])
+      FamilyGoal.create(name: arr[0], code: find_family_code(arr[0]), position: arr[1], area: arr[2], world: arr[3])
     end
   end
 
   private
 
+  def find_family_code(family_name)
+    code = @family_codes.detect { |row| row[0] == family_name }
+    code.nil? ? 'no-code' : code[1]
+  end
+
   def set_arrays_by_xlsx
     @family_names = @xlsx.column(1).uniq.compact
+    @family_codes = @xlsx.column(2).uniq.compact
     @positions = @xlsx.column(3).uniq.compact
     @areas = @xlsx.column(4).uniq.compact
     @worlds = @xlsx.column(5).uniq.compact
@@ -29,9 +35,10 @@ class CombinationGenerator
 
   def set_array_by_dummy
     @family_names = families_dummy.map {|row| row[0] }.uniq
-    @positions = families_dummy.map {|row| row[1] }.uniq
-    @areas = families_dummy.map {|row| row[2] }.uniq
-    @worlds = families_dummy.map {|row| row[3] }.uniq
+    @family_codes = families_dummy.map {|row|  [row[0], row[1]] }.uniq
+    @positions = families_dummy.map {|row| row[2] }.uniq
+    @areas = families_dummy.map {|row| row[3] }.uniq
+    @worlds = families_dummy.map {|row| row[4] }.uniq
   end
 
   def generate_combinations
@@ -39,9 +46,9 @@ class CombinationGenerator
   end
 
   def families_dummy
-    [["EJECUTIVO PERSONAS","EJECUTIVO PERSONAS TRAINEE", "ZONA CENTRO 1", "Banco y Filiales"],
-     ["EJECUTIVO SELECT", "EJECUTIVO PERSONAS SENIOR", "ZONA CENTRO 2", "Banco y Filiales"],
-     ["AGENTE", "EJECUTIVO PERSONAS JUNIOR", "ZONA CENTRO 3", "Banefe"]]
+    [["EJECUTIVO PERSONAS", "stdfijaejecpers","EJECUTIVO PERSONAS TRAINEE", "ZONA CENTRO 1", "Banco y Filiales"],
+     ["EJECUTIVO SELECT", "stdfijaejecsel", "EJECUTIVO PERSONAS SENIOR", "ZONA CENTRO 2", "Banco y Filiales"],
+     ["AGENTE", "stdfijaagente", "EJECUTIVO PERSONAS JUNIOR", "ZONA CENTRO 3", "Banefe"]]
   end
 
   def remove_headers
